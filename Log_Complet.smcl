@@ -1,0 +1,776 @@
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  /Users/aliachebbi/Desktop/M1/S7/Econometrie_theorique/Projet/final/CHEBBI_YAMOUL_Log_Complet.smcl
+  log type:  text
+ opened on:   3 Dec 2025, 12:18:16
+
+. 
+. 
+. clear all
+
+. set more off
+
+. set graphics on 
+
+. set scheme s1color 
+
+. 
+. // >>> A MODIFIER : CHEMIN D'ACCES <<<
+. cd "/Users/aliachebbi/Desktop/M1/S7/Econometrie_theorique/Projet" 
+/Users/aliachebbi/Desktop/M1/S7/Econometrie_theorique/Projet
+
+. 
+. /* ==========================================================================
+>    ETAPE 1 : PREPARATION DE LA BASE DE DONNEES
+>    ========================================================================== */
+. import excel "BDD.xlsx", sheet("Data") firstrow clear
+(69 vars, 214 obs)
+
+. 
+. rename SeriesCode code
+
+. rename CountryName pays
+
+. rename CountryCode id_pays 
+
+. drop SeriesName
+
+. 
+. 
+. keep if inlist(code, "NE.GDI.TOTL.ZS", "NY.GNS.ICTR.ZS", "NY.GDP.MKTP.KD.ZG", "NE.TRD.GNFS.ZS")
+(94 observations deleted)
+
+. 
+. drop if missing(pays)
+(0 observations deleted)
+
+. duplicates drop pays code, force
+
+Duplicates in terms of pays code
+
+(0 observations are duplicates)
+
+. 
+. // Reshape Long (Années)
+. reshape long YR, i(pays id_pays code) j(annee)
+(j = 1960 1961 1962 1963 1964 1965 1966 1967 1968 1969 1970 1971 1972 1973 1974 1975 1976 1977 1978 1979 1980 1981 1982 1983 1984 1985 1986 1987 1988 1989 1990 1991 199
+> 2 1993 1994 1995 1996 1997 1998 1999 2000 2001 2002 2003 2004 2005 2006 2007 2008 2009 2010 2011 2012 2013 2014 2015 2016 2017 2018 2019 2020 2021 2022 2023 2024)
+
+Data                               Wide   ->   Long
+-----------------------------------------------------------------------------
+Number of observations              120   ->   7,800       
+Number of variables                  68   ->   5           
+j variable (65 values)                    ->   annee
+xij variables:
+               YR1960 YR1961 ... YR2024   ->   YR
+-----------------------------------------------------------------------------
+
+. replace YR = "" if YR == ".."
+(1,374 real changes made)
+
+. destring YR, replace force
+YR: all characters numeric; replaced as double
+(1374 missing values generated)
+
+. rename YR valeur
+
+. 
+. // Reshape Wide (Variables)
+. replace code = "Investissement" if code == "NE.GDI.TOTL.ZS"
+(1,950 real changes made)
+
+. replace code = "Epargne" if code == "NY.GNS.ICTR.ZS"
+(1,950 real changes made)
+
+. replace code = "Croissance" if code == "NY.GDP.MKTP.KD.ZG"
+(1,950 real changes made)
+
+. replace code = "Ouverture" if code == "NE.TRD.GNFS.ZS"
+(1,950 real changes made)
+
+. 
+. reshape wide valeur, i(pays id_pays annee) j(code) string
+(j = Croissance Epargne Investissement Ouverture)
+
+Data                               Long   ->   Wide
+-----------------------------------------------------------------------------
+Number of observations            7,800   ->   1,950       
+Number of variables                   5   ->   7           
+j variable (4 values)              code   ->   (dropped)
+xij variables:
+                                 valeur   ->   valeurCroissance valeurEpargne ... valeurOuverture
+-----------------------------------------------------------------------------
+
+. rename valeur* *
+
+. 
+. // Labeling
+. label var Investissement "Taux d'investissement (% du PIB)"
+
+. label var Epargne "Taux d'épargne (% du PIB)"
+
+. label var Croissance "Croissance du PIB (%)"
+
+. label var Ouverture "Ouverture commerciale (% du PIB)"
+
+. 
+. save "master_data_projet.dta", replace
+file master_data_projet.dta saved
+
+. di ">>> BASE PRETE <<<"
+>>> BASE PRETE <<<
+
+. 
+. /* ==========================================================================
+>    ETAPE 2 : ANALYSE PRINCIPALE (Modèle de Base)
+>    ========================================================================== */
+. 
+. /* --- 1. Statistiques Descriptives --- */
+. use "master_data_projet.dta", clear
+
+. keep if annee >= 2000 & annee <= 2024
+(1,200 observations deleted)
+
+. collapse (mean) Investissement Epargne Croissance Ouverture, by(pays id_pays)
+
+. summarize
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+        pays |          0
+     id_pays |          0
+Investisse~t |         30    23.34936    3.071711   17.61273   31.80887
+     Epargne |         30    23.75301    5.748678   12.11023   37.55916
+  Croissance |         30    2.166101    1.130541    .559257   5.101066
+-------------+---------------------------------------------------------
+   Ouverture |         30    95.33204    59.59313   26.48879   324.4495
+
+. 
+. /* --- 2. Estimation Globale (2000-2024) & Graphique --- */
+. di _n ">>> REGRESSION MCO GLOBALE (2000-2024) <<<"
+
+>>> REGRESSION MCO GLOBALE (2000-2024) <<<
+
+. reg Investissement Epargne
+
+      Source |       SS           df       MS      Number of obs   =        30
+-------------+----------------------------------   F(1, 28)        =     20.51
+       Model |  115.693799         1  115.693799   Prob > F        =    0.0001
+    Residual |  157.933129        28  5.64046889   R-squared       =    0.4228
+-------------+----------------------------------   Adj R-squared   =    0.4022
+       Total |  273.626928        29  9.43541131   Root MSE        =     2.375
+
+------------------------------------------------------------------------------
+Investisse~t | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+     Epargne |   .3474466   .0767168     4.53   0.000     .1902993    .5045939
+       _cons |   15.09646   1.873134     8.06   0.000     11.25952     18.9334
+------------------------------------------------------------------------------
+
+. 
+. // Graphique Esthétique
+. twoway (scatter Investissement Epargne, mlabel(id_pays) mlabsize(tiny) mlabcolor(black) mlabpos(12) msymbol(circle_hollow) mcolor(navy)) ///
+>        (lfit Investissement Epargne, lcolor(maroon) lwidth(medthick)), ///
+>        title("Relation Épargne-Investissement (2000-2024)") ///
+>        subtitle("Moyennes de long terme (30 pays OCDE)") ///
+>        ytitle("Taux d'Investissement (% PIB)") xtitle("Taux d'Épargne (% PIB)") ///
+>        legend(order(1 "Pays" 2 "Droite de régression") position(6)) ///
+>        graphregion(color(white)) name(Graph_Q1_Clean, replace)
+
+. graph export "Graph_Q1_Clean.png", replace
+file /Users/aliachebbi/Desktop/M1/S7/Econometrie_theorique/Projet/Graph_Q1_Clean.png saved as PNG format
+
+. 
+. /* ==========================================================================
+>    ETAPE 3 : DIAGNOSTICS ECONOMETRIQUES
+>    ========================================================================== */
+. 
+. /* --- 1. Hétéroscédasticité --- */
+. di _n ">>> TEST DE BREUSCH-PAGAN <<<"
+
+>>> TEST DE BREUSCH-PAGAN <<<
+
+. hettest
+
+Breusch–Pagan/Cook–Weisberg test for heteroskedasticity 
+Assumption: Normal error terms
+Variable: Fitted values of Investissement
+
+H0: Constant variance
+
+    chi2(1) =   3.67
+Prob > chi2 = 0.0553
+
+. 
+. di _n ">>> TEST DE WHITE <<<"
+
+>>> TEST DE WHITE <<<
+
+. estat imtest, white
+
+White's test
+H0: Homoskedasticity
+Ha: Unrestricted heteroskedasticity
+
+    chi2(2) =   5.22
+Prob > chi2 = 0.0734
+
+Cameron & Trivedi's decomposition of IM-test
+
+--------------------------------------------------
+              Source |       chi2     df         p
+---------------------+----------------------------
+  Heteroskedasticity |       5.22      2    0.0734
+            Skewness |       1.52      1    0.2171
+            Kurtosis |       0.83      1    0.3612
+---------------------+----------------------------
+               Total |       7.58      4    0.1082
+--------------------------------------------------
+
+. 
+. // Correction Robuste (si nécessaire)
+. di _n ">>> REGRESSION ROBUSTE (VCE ROBUST) <<<"
+
+>>> REGRESSION ROBUSTE (VCE ROBUST) <<<
+
+. reg Investissement Epargne, vce(robust)
+
+Linear regression                               Number of obs     =         30
+                                                F(1, 28)          =      17.37
+                                                Prob > F          =     0.0003
+                                                R-squared         =     0.4228
+                                                Root MSE          =      2.375
+
+------------------------------------------------------------------------------
+             |               Robust
+Investisse~t | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+     Epargne |   .3474466   .0833581     4.17   0.000     .1766952     .518198
+       _cons |   15.09646   1.823843     8.28   0.000     11.36048    18.83243
+------------------------------------------------------------------------------
+
+. 
+. /* --- 2. Normalité des Résidus --- */
+. predict e_resid, residuals
+
+. di _n ">>> TEST DE SHAPIRO-WILK (Normalité) <<<"
+
+>>> TEST DE SHAPIRO-WILK (Normalité) <<<
+
+. swilk e_resid
+
+                   Shapiro–Wilk W test for normal data
+
+    Variable |        Obs       W           V         z       Prob>z
+-------------+------------------------------------------------------
+     e_resid |         30    0.97016      0.949    -0.109    0.54350
+
+. 
+. // Graphique Normalité
+. histogram e_resid, kdensity normal ///
+>           title("Distribution des Résidus") ///
+>           note("Test de la normalité des erreurs") ///
+>           graphregion(color(white)) name(Graph_Normalite, replace)
+(bin=5, start=-4.2049975, width=1.7841934)
+
+. graph export "Graph_Normalite.png", replace
+file /Users/aliachebbi/Desktop/M1/S7/Econometrie_theorique/Projet/Graph_Normalite.png saved as PNG format
+
+. 
+. /* --- 3. Multicolinéarité (Modèle Augmenté) --- */
+. di _n ">>> DIAGNOSTIC MULTICOLINEARITE (VIF) <<<"
+
+>>> DIAGNOSTIC MULTICOLINEARITE (VIF) <<<
+
+. quietly reg Investissement Epargne Croissance Ouverture
+
+. vif
+
+    Variable |       VIF       1/VIF  
+-------------+----------------------
+   Ouverture |      1.11    0.901056
+  Croissance |      1.09    0.918133
+     Epargne |      1.03    0.966366
+-------------+----------------------
+    Mean VIF |      1.08
+
+. 
+. /* ==========================================================================
+>    ETAPE 4 : ROBUSTESSE ET DYNAMIQUE
+>    ========================================================================== */
+. 
+. /* --- 1. Sensibilité à la taille de l'échantillon (15 pays) --- */
+. use "master_data_projet.dta", clear
+
+. keep if annee >= 2000 & annee <= 2024
+(1,200 observations deleted)
+
+. collapse (mean) Investissement Epargne, by(pays id_pays)
+
+. sort pays
+
+. gen echantillon_15 = (_n <= 15)
+
+. 
+. di _n ">>> REGRESSION ECHANTILLON REDUIT (15 PAYS) <<<"
+
+>>> REGRESSION ECHANTILLON REDUIT (15 PAYS) <<<
+
+. reg Investissement Epargne if echantillon_15 == 1
+
+      Source |       SS           df       MS      Number of obs   =        15
+-------------+----------------------------------   F(1, 13)        =      7.22
+       Model |  33.3206757         1  33.3206757   Prob > F        =    0.0186
+    Residual |  59.9610273        13  4.61238672   R-squared       =    0.3572
+-------------+----------------------------------   Adj R-squared   =    0.3078
+       Total |  93.2817031        14  6.66297879   Root MSE        =    2.1476
+
+------------------------------------------------------------------------------
+Investisse~t | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+     Epargne |   .3608925   .1342715     2.69   0.019     .0708166    .6509683
+       _cons |    14.9563   3.208668     4.66   0.000     8.024391     21.8882
+------------------------------------------------------------------------------
+
+. test Epargne = 1
+
+ ( 1)  Epargne = 1
+
+       F(  1,    13) =   22.66
+            Prob > F =    0.0004
+
+. 
+. // Graphique Robustesse
+. twoway (lfit Investissement Epargne, lcolor(red) lwidth(thick)) ///
+>        (lfit Investissement Epargne if echantillon_15 == 1, lcolor(forest_green) lpattern(dash) lwidth(thick)), ///
+>        title("Sensibilité à la taille de l'échantillon") ///
+>        subtitle("Comparaison des droites de régression") ///
+>        ytitle("Taux d'Investissement (% PIB)") xtitle("Taux d'Épargne (% PIB)") ///
+>        legend(order(1 "Complet (30 pays)" 2 "Réduit (15 pays)") position(6)) ///
+>        graphregion(color(white)) name(Graph_Robustesse_Lignes, replace)
+
+. graph export "Graph_Robustesse_Lignes.png", replace
+file /Users/aliachebbi/Desktop/M1/S7/Econometrie_theorique/Projet/Graph_Robustesse_Lignes.png saved as PNG format
+
+. 
+. /* --- 2. Dynamique par Sous-Périodes --- */
+. di _n ">>> COMPARAISON SOUS-PERIODES <<<"
+
+>>> COMPARAISON SOUS-PERIODES <<<
+
+. 
+. // 2000-2009
+. use "master_data_projet.dta", clear
+
+. keep if annee >= 2000 & annee <= 2009
+(1,650 observations deleted)
+
+. collapse (mean) Investissement Epargne, by(pays)
+
+. di _n "--- 2000-2009 ---"
+
+--- 2000-2009 ---
+
+. reg Investissement Epargne
+
+      Source |       SS           df       MS      Number of obs   =        30
+-------------+----------------------------------   F(1, 28)        =      2.19
+       Model |  20.1146781         1  20.1146781   Prob > F        =    0.1500
+    Residual |  257.047042        28  9.18025149   R-squared       =    0.0726
+-------------+----------------------------------   Adj R-squared   =    0.0395
+       Total |   277.16172        29  9.55730068   Root MSE        =    3.0299
+
+------------------------------------------------------------------------------
+Investisse~t | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+     Epargne |   .1416047    .095664     1.48   0.150    -.0543541    .3375635
+       _cons |    20.6842   2.327173     8.89   0.000      15.9172    25.45119
+------------------------------------------------------------------------------
+
+. 
+. // 2010-2019
+. use "master_data_projet.dta", clear
+
+. keep if annee >= 2010 & annee <= 2019
+(1,650 observations deleted)
+
+. collapse (mean) Investissement Epargne, by(pays)
+
+. di _n "--- 2010-2019 ---"
+
+--- 2010-2019 ---
+
+. reg Investissement Epargne
+
+      Source |       SS           df       MS      Number of obs   =        30
+-------------+----------------------------------   F(1, 28)        =     35.49
+       Model |  242.854765         1  242.854765   Prob > F        =    0.0000
+    Residual |  191.609906        28  6.84321094   R-squared       =    0.5590
+-------------+----------------------------------   Adj R-squared   =    0.5432
+       Total |  434.464671        29  14.9815404   Root MSE        =     2.616
+
+------------------------------------------------------------------------------
+Investisse~t | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+     Epargne |   .4814558   .0808189     5.96   0.000     .3159058    .6470059
+       _cons |   11.30502   1.940816     5.82   0.000     7.329444     15.2806
+------------------------------------------------------------------------------
+
+. 
+. // 2020-2024
+. use "master_data_projet.dta", clear
+
+. keep if annee >= 2020 & annee <= 2024
+(1,800 observations deleted)
+
+. collapse (mean) Investissement Epargne, by(pays)
+
+. di _n "--- 2020-2024 ---"
+
+--- 2020-2024 ---
+
+. reg Investissement Epargne
+
+      Source |       SS           df       MS      Number of obs   =        30
+-------------+----------------------------------   F(1, 28)        =     26.22
+       Model |  181.405157         1  181.405157   Prob > F        =    0.0000
+    Residual |  193.743128        28  6.91939744   R-squared       =    0.4836
+-------------+----------------------------------   Adj R-squared   =    0.4651
+       Total |  375.148286        29  12.9361478   Root MSE        =    2.6305
+
+------------------------------------------------------------------------------
+Investisse~t | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+     Epargne |   .3710686   .0724709     5.12   0.000     .2226188    .5195185
+       _cons |     14.447   1.866163     7.74   0.000     10.62434    18.26966
+------------------------------------------------------------------------------
+
+. 
+. /* ==========================================================================
+>    ETAPE 5 : EXTENSIONS
+>    ========================================================================== */
+. 
+. /* --- 1. Outliers (Distance de Cook) --- */
+. use "master_data_projet.dta", clear
+
+. keep if annee >= 2000 & annee <= 2024
+(1,200 observations deleted)
+
+. collapse (mean) Investissement Epargne, by(pays id_pays)
+
+. 
+. quietly reg Investissement Epargne
+
+. predict cook, cooksd
+
+. 
+. di _n ">>> PAYS OUTLIERS (Cook > 0.133) <<<"
+
+>>> PAYS OUTLIERS (Cook > 0.133) <<<
+
+. list pays cook if cook > 0.133
+
+     +------------------------+
+     |        pays       cook |
+     |------------------------|
+ 16. | Korea, Rep.   .4259527 |
+ 21. |      Norway   .3597978 |
+     +------------------------+
+
+. 
+. di _n ">>> REGRESSION SANS OUTLIERS <<<"
+
+>>> REGRESSION SANS OUTLIERS <<<
+
+. reg Investissement Epargne if cook <= 0.133
+
+      Source |       SS           df       MS      Number of obs   =        28
+-------------+----------------------------------   F(1, 26)        =     14.69
+       Model |  70.7285243         1  70.7285243   Prob > F        =    0.0007
+    Residual |  125.211577        26  4.81582988   R-squared       =    0.3610
+-------------+----------------------------------   Adj R-squared   =    0.3364
+       Total |  195.940101        27  7.25704078   Root MSE        =    2.1945
+
+------------------------------------------------------------------------------
+Investisse~t | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+     Epargne |   .3350383   .0874244     3.83   0.001     .1553348    .5147417
+       _cons |   15.32651   2.042394     7.50   0.000     11.12831    19.52471
+------------------------------------------------------------------------------
+
+. 
+. // Graphique Outliers
+. graph hbar cook, bar(1, color(maroon)) yline(0.133) ///
+>       over(id_pays, sort(cook) descending label(labsize(vsmall))) ///
+>       title("Distance de Cook (Points Influents)") name(Graph_Outliers, replace)
+
+. graph export "Graph_Outliers.png", replace
+file /Users/aliachebbi/Desktop/M1/S7/Econometrie_theorique/Projet/Graph_Outliers.png saved as PNG format
+
+. 
+. /* --- 2. Test de Rupture Structurelle (Chow) --- */
+. use "master_data_projet.dta", clear
+
+. keep if annee >= 2000 & annee <= 2024
+(1,200 observations deleted)
+
+. gen Period_Post2010 = (annee >= 2010)
+
+. collapse (mean) Investissement Epargne, by(pays Period_Post2010)
+
+. 
+. di _n ">>> TEST DE CHOW (Rupture 2010) <<<"
+
+>>> TEST DE CHOW (Rupture 2010) <<<
+
+. reg Investissement c.Epargne##i.Period_Post2010
+
+      Source |       SS           df       MS      Number of obs   =        60
+-------------+----------------------------------   F(3, 56)        =     11.35
+       Model |  258.154002         3  86.0513342   Prob > F        =    0.0000
+    Residual |    424.7094        56  7.58409644   R-squared       =    0.3780
+-------------+----------------------------------   Adj R-squared   =    0.3447
+       Total |  682.863403        59   11.573956   Root MSE        =    2.7539
+
+-------------------------------------------------------------------------------------------
+           Investissement | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------------------+----------------------------------------------------------------
+                  Epargne |   .1416047   .0869507     1.63   0.109    -.0325785    .3157879
+        1.Period_Post2010 |  -8.441446   2.943047    -2.87   0.006    -14.33708   -2.545814
+                          |
+Period_Post2010#c.Epargne |
+                       1  |    .305938   .1204467     2.54   0.014     .0646544    .5472217
+                          |
+                    _cons |    20.6842   2.115209     9.78   0.000     16.44692    24.92147
+-------------------------------------------------------------------------------------------
+
+. 
+. /* --- 3. Effet Zone Euro --- */
+. use "master_data_projet.dta", clear
+
+. keep if annee >= 2000 & annee <= 2024
+(1,200 observations deleted)
+
+. 
+. gen ZoneEuro = 0
+
+. // Liste coupée en deux pour éviter l'erreur r(130)
+. replace ZoneEuro = 1 if inlist(pays, "Austria", "Belgium", "Finland", "France", "Germany", "Greece")
+(150 real changes made)
+
+. replace ZoneEuro = 1 if inlist(pays, "Ireland", "Italy", "Luxembourg", "Netherlands", "Portugal", "Spain")
+(150 real changes made)
+
+. 
+. collapse (mean) Investissement Epargne, by(pays ZoneEuro)
+
+. 
+. di _n ">>> TEST ZONE EURO <<<"
+
+>>> TEST ZONE EURO <<<
+
+. reg Investissement c.Epargne##i.ZoneEuro
+
+      Source |       SS           df       MS      Number of obs   =        30
+-------------+----------------------------------   F(3, 26)        =      8.58
+       Model |  136.134989         3  45.3783297   Prob > F        =    0.0004
+    Residual |  137.491939        26  5.28815149   R-squared       =    0.4975
+-------------+----------------------------------   Adj R-squared   =    0.4395
+       Total |  273.626928        29  9.43541131   Root MSE        =    2.2996
+
+------------------------------------------------------------------------------------
+    Investissement | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------------+----------------------------------------------------------------
+           Epargne |   .3316223   .0870716     3.81   0.001      .152644    .5106006
+        1.ZoneEuro |  -1.332118   4.068591    -0.33   0.746    -9.695226    7.030989
+                   |
+ZoneEuro#c.Epargne |
+                1  |  -.0157867   .1712101    -0.09   0.927     -.367714    .3361406
+                   |
+             _cons |   16.14926   2.190656     7.37   0.000      11.6463    20.65222
+------------------------------------------------------------------------------------
+
+. 
+. /* --- 4. Modèle Augmenté --- */
+. use "master_data_projet.dta", clear
+
+. keep if annee >= 2000 & annee <= 2024
+(1,200 observations deleted)
+
+. collapse (mean) Investissement Epargne Croissance Ouverture, by(pays)
+
+. 
+. di _n ">>> MODELE AUGMENTE <<<"
+
+>>> MODELE AUGMENTE <<<
+
+. reg Investissement Epargne Croissance Ouverture
+
+      Source |       SS           df       MS      Number of obs   =        30
+-------------+----------------------------------   F(3, 26)        =     17.90
+       Model |  184.355119         3  61.4517062   Prob > F        =    0.0000
+    Residual |  89.2718093        26  3.43353113   R-squared       =    0.6737
+-------------+----------------------------------   Adj R-squared   =    0.6361
+       Total |  273.626928        29  9.43541131   Root MSE        =     1.853
+
+------------------------------------------------------------------------------
+Investisse~t | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+     Epargne |   .3427752   .0608881     5.63   0.000     .2176178    .4679325
+  Croissance |   1.375404    .317638     4.33   0.000     .7224901    2.028319
+   Ouverture |  -.0135754   .0060827    -2.23   0.034    -.0260787   -.0010722
+       _cons |   13.52232    1.55822     8.68   0.000     10.31936    16.72529
+------------------------------------------------------------------------------
+
+. 
+. /* --- 5. Graphiques Annexes Manquants --- */
+. // Recréation des variables nécessaires
+. use "master_data_projet.dta", clear
+
+. keep if annee >= 2000 & annee <= 2024
+(1,200 observations deleted)
+
+. collapse (mean) Investissement Epargne, by(pays id_pays)
+
+. quietly reg Investissement Epargne
+
+. predict e_final, residuals
+
+. predict y_hat_final, xb
+
+. 
+. // Graphique Homoscédasticité
+. rvfplot, yline(0, lcolor(red)) mlabel(id_pays) mlabsize(tiny) ///
+>          title("Graphique des Résidus") subtitle("Test visuel d'homoscédasticité") ///
+>          ytitle("Résidus") xtitle("Valeurs Prédites (Investissement)") ///
+>          graphregion(color(white)) name(Graph_Homoscedasticite, replace)
+
+. graph export "Graph_Homoscedasticite.png", replace
+file /Users/aliachebbi/Desktop/M1/S7/Econometrie_theorique/Projet/Graph_Homoscedasticite.png saved as PNG format
+
+. 
+. // Graphique Zone Euro (récupération dummy rapide)
+. use "master_data_projet.dta", clear
+
+. keep if annee >= 2000 & annee <= 2024
+(1,200 observations deleted)
+
+. gen ZoneEuro = 0
+
+. replace ZoneEuro = 1 if inlist(pays, "Austria", "Belgium", "Finland", "France", "Germany", "Greece")
+(150 real changes made)
+
+. replace ZoneEuro = 1 if inlist(pays, "Ireland", "Italy", "Luxembourg", "Netherlands", "Portugal", "Spain")
+(150 real changes made)
+
+. collapse (mean) Investissement Epargne, by(pays id_pays ZoneEuro)
+
+. 
+. twoway (scatter Investissement Epargne if ZoneEuro==0, mcolor(gs10) msymbol(circle)) ///
+>        (scatter Investissement Epargne if ZoneEuro==1, mcolor(blue) msymbol(diamond) mlabel(id_pays) mlabsize(tiny) mlabcolor(blue) mlabpos(12)) ///
+>        (lfit Investissement Epargne if ZoneEuro==0, lcolor(gs10)) ///
+>        (lfit Investissement Epargne if ZoneEuro==1, lcolor(blue)), ///
+>        title("Zone Euro vs Reste de l'OCDE") ///
+>        legend(order(1 "Reste OCDE" 2 "Zone Euro" 3 "Fit Reste" 4 "Fit Euro")) ///
+>        graphregion(color(white)) name(Graph_ZoneEuro, replace)
+
+. graph export "Graph_ZoneEuro.png", replace
+file /Users/aliachebbi/Desktop/M1/S7/Econometrie_theorique/Projet/Graph_ZoneEuro.png saved as PNG format
+
+. 
+. /* ==========================================================================
+>    ETAPE 6 : GRAPHIQUE SYNTHESE AUTOMATISÉ (BONUS 20/20)
+>    ========================================================================== */
+. 
+. // 1. Préparation du fichier de stockage des résultats
+. capture postclose memhold
+
+. tempname memhold
+
+. postfile `memhold' id str20 periode beta lower upper using "graph_data.dta", replace
+
+. 
+. // --- PERIODE 1 : 2000-2009 ---
+. use "master_data_projet.dta", clear
+
+. keep if annee >= 2000 & annee <= 2009
+(1,650 observations deleted)
+
+. collapse (mean) Investissement Epargne, by(pays)
+
+. quietly reg Investissement Epargne
+
+. post `memhold' (1) ("2000-2009") (_b[Epargne]) (_b[Epargne] - 1.96*_se[Epargne]) (_b[Epargne] + 1.96*_se[Epargne])
+
+. 
+. // --- PERIODE 2 : 2010-2019 ---
+. use "master_data_projet.dta", clear
+
+. keep if annee >= 2010 & annee <= 2019
+(1,650 observations deleted)
+
+. collapse (mean) Investissement Epargne, by(pays)
+
+. quietly reg Investissement Epargne
+
+. post `memhold' (2) ("2010-2019") (_b[Epargne]) (_b[Epargne] - 1.96*_se[Epargne]) (_b[Epargne] + 1.96*_se[Epargne])
+
+. 
+. // --- PERIODE 3 : 2020-2024 ---
+. use "master_data_projet.dta", clear
+
+. keep if annee >= 2020 & annee <= 2024
+(1,800 observations deleted)
+
+. collapse (mean) Investissement Epargne, by(pays)
+
+. quietly reg Investissement Epargne
+
+. post `memhold' (3) ("2020-2024") (_b[Epargne]) (_b[Epargne] - 1.96*_se[Epargne]) (_b[Epargne] + 1.96*_se[Epargne])
+
+. 
+. postclose `memhold'
+
+. 
+. // 2. Chargement des résultats
+. use "graph_data.dta", clear
+
+. label define period_lbl 1 "2000-2009" 2 "2010-2019" 3 "2020-2024"
+
+. label values id period_lbl
+
+. 
+. // 3. Création du Graphique (Correction xlim -> xscale)
+. set scheme s1color
+
+. set graphics on
+
+. 
+. twoway (rcap lower upper id, lcolor(gs10) lwidth(medium)) ///
+>        (scatter beta id, mcolor(navy) msymbol(square) msize(medium) mlabel(beta) mlabpos(9) mlabsize(small)), ///
+>        yline(0, lcolor(red) lpattern(dash)) ///
+>        yline(1, lcolor(black) lwidth(thin)) ///
+>        xlabel(1 2 3, valuelabel noticks) ///
+>        xscale(range(0.5 3.5)) ///  <-- CORRECTION ICI
+>        xtitle("") ytitle("Coefficient Beta Estimé") ///
+>        title("Dynamique de l'intégration financière (OCDE)") ///
+>        subtitle("Évolution du coefficient Beta et intervalles de confiance (95%)") ///
+>        legend(order(2 "Estimation Beta" 1 "Intervalle de Confiance 95%") position(6) rows(1)) ///
+>        text(0.05 3.3 "Mobilité Parfaite", size(vsmall) color(red)) ///
+>        graphregion(color(white)) name(Graph_Synthese_Auto, replace)
+
+. 
+. graph export "Graph_Synthese_Beta.png", replace
+file /Users/aliachebbi/Desktop/M1/S7/Econometrie_theorique/Projet/Graph_Synthese_Beta.png saved as PNG format
+
+. 
+. di _n ">>> GRAPHIQUE SYNTHESE AUTOMATISÉ GÉNÉRÉ AVEC SUCCÈS <<<"
+
+>>> GRAPHIQUE SYNTHESE AUTOMATISÉ GÉNÉRÉ AVEC SUCCÈS <<<
+
+. log close
+      name:  <unnamed>
+       log:  /Users/aliachebbi/Desktop/M1/S7/Econometrie_theorique/Projet/final/CHEBBI_YAMOUL_Log_Complet.smcl
+  log type:  text
+ closed on:   3 Dec 2025, 12:18:21
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
