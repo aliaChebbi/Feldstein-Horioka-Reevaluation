@@ -1,0 +1,793 @@
+\documentclass[12pt, a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{geometry}
+\geometry{hmargin=2.5cm,vmargin=2.5cm}
+\usepackage{graphicx}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{setspace}
+\usepackage{hyperref}
+\usepackage{caption} % Permet d'utiliser \caption* (sans numéro)
+\onehalfspacing 
+
+\begin{document}
+
+% =================================================================================
+% PAGE DE GARDE PERSONNALISÉE
+% =================================================================================
+\begin{titlepage}
+    \centering
+    
+    % --- LOGOS ---
+    % Ajustez la largeur (width) si les logos sont trop gros ou trop petits
+    \begin{figure}[h]
+        \centering
+        % Si vous n'avez qu'un seul fichier image avec les deux logos, mettez juste une ligne.
+        % Sinon, voici comment mettre deux logos côte à côte :
+        \includegraphics[width=3.5cm]{logo_um.png} 
+        \hfill 
+        \includegraphics[width=3.5cm]{logo_faculte_economie.png}
+    \end{figure}
+    
+    \vspace{1cm}
+    
+    % --- INFO UNIVERSITÉ ET MASTER ---
+    {\Large \textsc{Université de Montpellier}}\\
+    \vspace{0.2cm}
+    {\large Faculté d'Économie}\\
+    \vspace{0.5cm}
+    
+    \textbf{Master 1 MBFA}\\
+    (Monnaie, Banque, Finance, Assurances)\\
+    \vspace{0.2cm}
+    \textit{Parcours SIEF (Systèmes d'Informations Économiques et Financières)}
+    
+    \vspace{2.5cm}
+    
+    % --- TITRE DU PROJET ---
+    % 
+    \rule{\linewidth}{0.5mm} \\[0.4cm]
+    { \huge \bfseries Mobilité internationale du capital à l’épreuve des crises récentes : \\[0.3cm] une réévaluation du puzzle de Feldstein-Horioka } \\[0.4cm]
+    \rule{\linewidth}{0.5mm}
+    
+    \vspace{2.5cm}
+    
+    % --- AUTEURS ET RESPONSABLE ---
+    \begin{minipage}{0.45\textwidth}
+        \begin{flushleft} \large
+            \emph{Binôme :}\\
+            Alia \textsc{Chebbi}\\
+            Rajaa \textsc{Yamoul}
+        \end{flushleft}
+    \end{minipage}
+    \begin{minipage}{0.45\textwidth}
+        \begin{flushright} \large
+            \emph{Responsable :}\\
+            Dr. Benoit \textsc{Mulkay}
+        \end{flushright}
+    \end{minipage}
+    
+    \vfill
+    
+    % --- DATE ET ANNÉE SCOLAIRE ---
+    {\large Projet d'Économétrie}\\
+    \vspace{0.2cm}
+    {\large Décembre 2025}\\
+    \vspace{0.2cm}
+    {\large Année universitaire 2025-2026}
+    
+\end{titlepage}
+\newpage
+
+% --- PAGE DE RÉSUMÉS ---
+\thispagestyle{empty}
+\vspace*{1cm}
+
+\begin{center}
+    \Large\textbf{Résumé}
+\end{center}
+
+Ce travail d’économétrie appliquée propose une réévaluation du puzzle de Feldstein et Horioka (1980) pour 30 pays de l’OCDE sur la période 2000-2024. L'objectif est d'analyser l'évolution de l'intégration financière internationale face aux chocs économiques majeurs du XXIe siècle (Grande Récession, crise de la zone euro, pandémie de Covid-19 et guerre en Ukraine).
+
+En utilisant la méthode des Moindres Carrés Ordinaires (MCO) sur des données en coupe transversale, nous estimons un coefficient de rétention de l'épargne ($\beta$) de 0,35 sur la période globale. Ce résultat, nettement inférieur aux estimations historiques des années 1970 (0,90), témoigne d'une forte mobilité des capitaux. 
+
+Cependant, l'analyse dynamique par sous-périodes et les tests de rupture structurelle (Chow) révèlent une fragmentation financière significative après la crise de 2008 : la corrélation épargne-investissement, quasi-nulle dans les années 2000, s'est renforcée au cours de la dernière décennie. Nos résultats s'avèrent robustes à l'exclusion des points influents (Corée du Sud, Norvège) et à l'ajout de variables de contrôle comme la croissance économique. Ils suggèrent que si l'autarcie financière est révolue, le "biais domestique" persiste en période d'incertitude.
+
+
+\newpage
+% --- CORPS DU TEXTE ---
+% =================================================================================
+\section{ Introduction et objectifs de l'application}
+% =================================================================================
+
+La libéralisation financière internationale, amorcée au début des années 1980, a profondément redessiné l'architecture de l'économie mondiale. Si cette ouverture promettait une allocation optimale de l'épargne et un soutien à la croissance, elle s'est également accompagnée d'une instabilité accrue et de crises systémiques, remettant parfois en cause la réalité de l'intégration des marchés.
+
+Dans ce cadre, l'approche pionnière de Feldstein et Horioka (1980) demeure la référence empirique majeure pour évaluer la mobilité des capitaux. La logique fondamentale de leur modèle postule que, dans un monde parfaitement intégré, l'épargne nationale devrait s'orienter vers les opportunités de rendement les plus élevées à l'échelle mondiale, indépendamment des frontières. Par conséquent, une absence de lien entre épargne et investissement signifierait une mobilité parfaite, tandis qu'une forte corrélation persistante signalerait l'existence de frictions financières ou d'un biais domestique\footnote{Le \textit{biais domestique} (\textit{Home Bias}) désigne la tendance des investisseurs à privilégier l'investissement dans des actifs nationaux plutôt qu'étrangers, même lorsque la diversification optimale de portefeuille suggère le contraire.}.
+
+Cet essai se propose de réexaminer cette hypothèse centrale sur la période contemporaine (2000-2024) au sein des pays de l'OCDE. Notre objectif est de déterminer si les économies modernes fonctionnent réellement comme des marchés ouverts, ou si la succession de chocs majeurs — de la Grande Récession de 2008 à la pandémie de Covid-19 et aux tensions géopolitiques récentes — a provoqué une fragmentation structurelle, entravant la libre circulation de l'épargne mondiale.
+% =================================================================================
+\section{Rappel des résultats fondateurs (Feldstein \& Horioka, 1980)}
+% =================================================================================
+
+Dans leur article séminal, Feldstein et Horioka (1980) testent la mobilité du capital sur un échantillon de 16 pays de l'OCDE (1960-1974). Ils estiment le modèle en coupe transversale suivant :
+\begin{equation}
+\label{eq:FH1980}
+\left(\frac{I}{Y}\right)_i = \alpha + \beta \left(\frac{S}{Y}\right)_i + \varepsilon_i
+\end{equation}
+
+L'évaluation économétrique repose sur deux tests d'hypothèses portant sur le coefficient de rétention $\beta$ :
+\begin{itemize}
+    \item \textbf{Mobilité parfaite :} On teste $H_0 : \beta = 0$ contre $H_1 : \beta \neq 0$.
+    \item \textbf{Autarcie financière :} On teste $H_0 : \beta = 1$ contre $H_1 : \beta \neq 1$.
+\end{itemize}
+
+Les résultats obtenus (Tableau \ref{tab:FH1980}) constituent le célèbre "puzzle". Les auteurs obtiennent des estimateurs $\hat{\beta}$ extrêmement élevés et stables, oscillant entre **0.87 et 0.91**.
+
+\begin{table}[H]
+    \centering
+    \caption{Résultats originaux de Feldstein et Horioka (1980)}
+    \label{tab:FH1980}
+    \begin{tabular}{lccc}
+        \toprule
+        \textbf{Période} & $\boldsymbol{\hat{\beta}}$ & $\boldsymbol{R^2}$ & \textbf{I.C. 95\% sur $\beta$} \\
+        \midrule
+        1960--1974 & \textbf{0.887} (0.074) & 0.91 & [0.73 ; 1.04] \\
+        1960--1964 & \textbf{0.909} (0.060) & 0.94 & [0.78 ; 1.03] \\
+        1965--1969 & \textbf{0.872} (0.101) & 0.83 & [0.66 ; 1.08] \\
+        1970--1974 & \textbf{0.871} (0.092) & 0.85 & [0.67 ; 1.06] \\
+        \bottomrule
+        \multicolumn{4}{l}{\footnotesize \textit{Note : Écarts-types entre parenthèses.}} \\
+        \multicolumn{4}{l}{\footnotesize \textit{Source : Feldstein \& Horioka (1980), Table 1.}} \\
+    \end{tabular}
+\end{table}
+
+L'analyse des intervalles de confiance à 95\% met en évidence deux résultats statistiques majeurs. En premier lieu, la valeur 0 est systématiquement exclue de l'intervalle, ce qui conduit au rejet de l'hypothèse nulle de mobilité parfaite ($H_0 : \beta = 0$). En second lieu, la valeur 1 y est systématiquement incluse, ce qui implique que l'on ne peut rejeter l'hypothèse d'autarcie financière ($H_0 : \beta = 1$).
+Cette corrélation quasi-unitaire suggère que, malgré la libéralisation financière naissante, les économies de l'OCDE se comportaient encore comme des économies faiblement intégrées avant 1974.
+
+% =================================================================================
+\section{Données et Stratégie Empirique de l'application}
+% =================================================================================
+
+\subsection{Source des données et échantillon}
+
+Les données mobilisées dans cette étude sont issues de la base des \textit{World Development Indicators} (WDI) de la Banque Mondiale. Notre échantillon est constitué des 30 pays ayant le statut de membre de l'OCDE de manière continue depuis 2000, observés jusqu'en 2024.
+
+La liste exhaustive des pays retenus est présentée en \hyperref[annexe:pays]{Annexe A }.
+
+La construction de la base de données finale a nécessité un travail préalable de traitement sous Stata. À partir des fichiers bruts extraits du WDI, nous avons procédé au nettoyage des séries et à la restructuration des données pour obtenir un format exploitable permettant le calcul des moyennes de long terme par pays.
+
+\subsection{Description des variables et statistiques descriptives}
+
+L’étude mobilise deux variables macroéconomiques centrales, exprimées en pourcentage du PIB afin d'assurer la comparabilité internationale. La variable dépendante retenue est le taux d’investissement domestique (\textit{Gross Capital Formation}), qui mesure l’accroissement des actifs fixes de l’économie ainsi que la variation nette des stocks. Cette variable est expliquée principalement par le taux d’épargne nationale brute (\textit{Gross National Savings}), défini comme le revenu national brut disponible diminué de la consommation finale totale.
+
+Par ailleurs, afin d'estimer le modèle augmenté et de contrôler pour d'éventuels biais de variable omise, nous introduisons deux variables explicatives additionnelles : le taux de croissance du PIB (\textit{GDP Growth}) et le taux d'ouverture commerciale (\textit{Trade Openness}).
+
+Le Tableau \ref{tab:descrip} présente les statistiques descriptives de ces variables sur l'ensemble de l'échantillon (30 pays, moyenne 2000-2024).
+
+\begin{table}[H]
+    \centering
+    \caption{Statistiques descriptives (Moyennes 2000-2024)}
+    \label{tab:descrip}
+    \begin{tabular}{lccccc}
+        \toprule
+        \textbf{Variable} & \textbf{Obs} & \textbf{Moyenne} & \textbf{Std. Dev.} & \textbf{Min} & \textbf{Max} \\
+        \midrule
+        Investissement ($I/Y$) & 30 & 23.34936 & 3.071711 & 17.61273 & 31.80887 \\
+        Épargne ($S/Y$) & 30 & 23.75301 & 5.748678 & 12.11023 & 37.55916 \\
+        Croissance ($g$) & 30 & 2.166101 & 1.130541 & 0.559257 & 5.101066 \\
+        Ouverture & 30 & 95.33204 & 59.59313 & 26.48879 & 324.4495 \\
+        \bottomrule
+        \multicolumn{6}{l}{\footnotesize \textit{Source : Calculs des auteurs à partir des données WDI.}} \\
+    \end{tabular}
+\end{table}
+
+Ces statistiques mettent en évidence une forte hétérogénéité structurelle au sein de l'OCDE, particulièrement visible pour le taux d'ouverture commerciale qui varie de 26\% à 324\% du PIB. Cette dispersion justifie l'approche économétrique pour isoler l'effet spécifique de l'épargne sur l'investissement.
+
+\subsection{Stratégie empirique d’estimation}
+
+La stratégie empirique adoptée dans cette étude s’articule autour de plusieurs étapes progressives. Dans un premier temps, nous estimons le modèle de base sur la période 2000-2024 afin de réévaluer la relation épargne-investissement dans le contexte contemporain, tout en vérifiant la validité des hypothèses économétriques sous-jacentes. Dans un second temps, nous comparons ces résultats avec ceux de l'étude originale de 1980 et analysons la dynamique temporelle à travers des estimations par sous-périodes et des tests de rupture structurelle. Enfin, nous testons la robustesse de nos conclusions par l'estimation d'un modèle enrichi incluant des variables de contrôle macroéconomiques.
+% =================================================================================
+\section{Résultats Empiriques}
+% =================================================================================
+
+Cette section présente les estimations du modèle de Feldstein-Horioka sur la période contemporaine en conservant la précision complète des estimations statistiques.
+
+\subsection{Estimation du modèle global (2000-2024)}
+
+L'estimation par la méthode des Moindres Carrés Ordinaires (MCO) sur l'échantillon complet (30 pays) conduit aux résultats présentés dans le Tableau \ref{tab:res_global}.
+
+\begin{table}[H]
+    \centering
+    \caption{Estimation MCO - Modèle de Feldstein-Horioka (2000-2024)}
+    \label{tab:res_global}
+    \begin{tabular}{lc}
+        \toprule
+        \multicolumn{2}{c}{\textbf{Variable dépendante : Taux d'Investissement ($I/Y$)}} \\
+        \midrule
+        Observations & 30 \\
+        $R^2$ & 0.4228 \\
+        $R^2$ ajusté & 0.4022 \\
+        Statistique de Fisher $F(1, 28)$ & 20.51 \\
+        Prob > F & 0.0001 \\
+        \midrule
+        \textbf{Variable} & \textbf{Coefficient (Std. Err.)} \\
+        Constante ($\alpha$) & 15.09646 (1.873134) \\
+        Taux d'Épargne ($\beta$) & \textbf{0.3474466} (0.0767168) \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+L'équation de la droite estimée s'écrit avec précision :
+\begin{equation}
+\widehat{(I/Y)}_i = 15.09646 + 0.3474466 \times (S/Y)_i
+\end{equation}
+
+\begin{figure}[H]
+    \centering
+    % TAILLE RÉDUITE ICI : 0.70\textwidth au lieu de 0.85
+    \includegraphics[width=0.70\textwidth]{Graph_Q1_Clean.png}
+    \caption{Relation Épargne-Investissement (Moyenne 2000-2024)}
+    \label{fig:graph_q1}
+    \caption*{\footnotesize \textit{Note : Nuage de points des 30 pays de l'OCDE. La droite rouge représente l'ajustement linéaire MCO.}}
+\end {figure}
+
+\subsubsection*{Tests d'hypothèses et interprétation économétrique}
+
+Nous analysons la significativité du modèle à travers les tests classiques.
+
+
+\textbf{1. Test de significativité globale (Test de Fisher)}
+Ce test vérifie l'hypothèse de nullité conjointe de tous les coefficients de pente du modèle.
+
+\begin{itemize}
+    \item $H_0 : \beta_1 = \beta_2 = \dots = \beta_k = 0$ (Toutes les variables explicatives n'ont aucun effet linéaire)\footnote{Dans notre cas (régression simple), cette hypothèse se réduit à $H_0 : \beta = 0$, le Test F étant équivalent au test de Student sur la pente.}.
+    \item $H_1 : \exists j$ tel que $\beta_j \neq 0$ (Au moins une variable explique le Taux d'Investissement).
+\end{itemize}
+
+La statistique de Fisher observée est $F = 20.51$ avec une p-value de $0.0001$.
+\textbf{Décision :} Nous rejetons l'hypothèse nulle au seuil de 1\%. Le modèle est globalement significatif (ce qui implique $R^2 > 0$).
+
+\textbf{2. Test de mobilité parfaite (Test de Student sur $\beta$)}
+\begin{itemize}
+    \item $H_0 : \beta = 0$ (Mobilité parfaite des capitaux).
+    \item $H_1 : \beta \neq 0$ (Mobilité imparfaite).
+\end{itemize}
+Le coefficient estimé est $\hat{\beta} = 0.3474466$. La statistique de Student se calcule précisément ainsi :
+\begin{equation}
+t_{stat} = \frac{0.3474466}{0.0767168} \approx 4.53
+\end{equation}
+La probabilité critique ($P>|t|$) est de $0.000$.
+Nous rejetons $H_0$. Il existe une corrélation significative.
+
+\textbf{3. Test d'autarcie financière}
+\begin{itemize}
+    \item $H_0 : \beta = 1$ (Immobilité totale / Économie fermée).
+    \item $H_1 : \beta \neq 1$ (Degré d'ouverture).
+\end{itemize}
+L'intervalle de confiance à 95\% fourni par l'estimation est :
+\begin{equation}
+IC_{0.95} = [0.1902993 \; ; \; 0.5045939]
+\end{equation}
+La valeur 1 n'appartenant pas à cet intervalle, nous rejetons l'hypothèse d'une économie fermée.
+
+\subsubsection*{Analyse graphique}
+L'examen graphique du nuage de points (Figure 1, voir Annexe B \ref{fig:graph_q1} ) confirme l'existence d'une relation structurelle positive entre les taux d'épargne et d'investissement. La pente ascendante de la droite de régression illustre graphiquement le coefficient estimé de $\hat{\beta} \approx 0.35$.
+
+D'un point de vue économétrique, la dispersion des observations autour de cette droite reflète la variance non expliquée par le modèle ($1 - R^2 \approx 58\%$). L'écart vertical entre chaque point observé et la droite des moindres carrés correspond au résidu estimé ($e_i$), qui approxime l'aléa structurel ($\varepsilon_i$). On note par ailleurs une certaine hétérogénéité dans la variance des résidus, suggérant la présence potentielle d'hétéroscédasticité ou de points influents (comme la Corée ou la Norvège, situés aux extrémités de la distribution), ce qui justifie les tests de diagnostic menés ultérieurement.
+
+
+
+
+\subsection{Analyse dynamique par sous-périodes}
+
+L'estimation du modèle sur trois sous-périodes permet d'identifier les ruptures structurelles.
+
+\begin{table}[H]
+    \centering
+    \caption{Comparaison des estimations par sous-périodes (Données complètes)}
+    \begin{tabular}{lccc}
+        \toprule
+         & \textbf{2000-2009} & \textbf{2010-2019} & \textbf{2020-2024} \\
+        \midrule
+        Coefficient $\hat{\beta}$ & 0.1416047 & 0.4814558 & 0.3710686 \\
+        (Ecart-type) & (0.095664) & (0.0808189) & (0.0724709) \\
+        $t_{stat}$ & 1.48 & 5.96 & 5.12 \\
+        Prob > F & 0.1500 & 0.0000 & 0.0000 \\
+        \midrule
+        I.C. 95\% (Bas) & -0.0543541 & 0.3159058 & 0.2226188 \\
+        I.C. 95\% (Haut) & 0.3375635 & 0.6470059 & 0.5195185 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\textbf{1. Période 2000-2009 :}
+Le coefficient estimé est faible (0.142). L'intervalle de confiance à 95\% incluant la valeur 0 ($p=0.15$), nous ne rejetons pas l'hypothèse nulle de mobilité parfaite ($H_0 : \beta = 0$). Cette décennie se caractérise donc par une très forte intégration financière où l'épargne n'est pas corrélée à l'investissement domestique.
+
+
+\textbf{2. Période 2010-2019 :}
+Le coefficient remonte significativement à 0.481. La valeur 0 étant exclue de l'intervalle de confiance, nous rejetons formellement l'hypothèse nulle. Ce résultat traduit une re-fragmentation partielle des marchés financiers après la crise de 2008, marquant le retour d'un biais domestique significatif.
+
+\textbf{3. Période 2020-2024 :}
+Le coefficient s'établit à 0.371. Nous rejetons toujours l'hypothèse nulle ($t=5.12$), confirmant que l'épargne reste un déterminant de l'investissement. Toutefois, la baisse légère du coefficient par rapport à la décennie précédente suggère une stabilisation de l'intégration financière à un niveau intermédiaire, résiliente aux chocs récents.
+
+
+
+\subsection{Test de Rupture Structurelle (Crise de 2008)}
+
+Nous vérifions si la crise financière a modifié la structure de la relation Épargne-Investissement via un test de Chow (variable muette post-2010 et interaction).
+
+\textbf{Hypothèses :}
+\begin{itemize}
+    \item $H_0 : \beta_{pre-2010} = \beta_{post-2010}$ (Stabilité structurelle).
+    \item $H_1 : \beta_{pre-2010} \neq \beta_{post-2010}$ (Rupture structurelle).
+\end{itemize}
+
+Le coefficient du terme d'interaction (\texttt{Period\_Post2010\#c.Epargne}) est de 0.306 avec une statistique de Student de 2.54 et une p-value de 0.014.
+Avec $p < 0.05$, nous rejetons l'hypothèse de stabilité.
+Il y a donc une rupture structurelle significative. La corrélation épargne-investissement s'est renforcée après la crise de 2008, confirmant la fragmentation financière.
+\subsection{Comparaison avec l'étude de Feldstein et Horioka (1980)}
+
+Il est pertinent de confronter nos résultats contemporains aux conclusions historiques de Feldstein et Horioka (FH).
+Dans leur étude couvrant la période 1960-1974, FH obtenaient un coefficient $\beta$ très élevé, oscillant entre 0.87 et 0.91.
+
+Nos résultats sur la période 2000-2024 contrastent fortement :
+\begin{itemize}
+    \item Notre coefficient global ($\hat{\beta} \approx 0.3474$) est largement inférieur à celui de FH.
+    \item Contrairement à FH, nous rejetons fermement l'hypothèse $\beta=1$ (autarcie) sur toutes les sous-périodes, car la borne supérieure de nos intervalles de confiance (ex: 0.5045 pour la période globale) est toujours très éloignée de 1.
+\end{itemize}
+% =================================================================================
+\subsection{Diagnostics économétriques et validation des hypothèses}
+% =================================================================================
+
+Afin de garantir la fiabilité de nos estimateurs MCO, nous avons procédé à une batterie de tests diagnostiques formels, conformément aux standards de l'économétrie théorique.
+
+\subsubsection*{1. Test d'Hétéroscédasticité}
+L'hypothèse d'homoscédasticité ($Var(\epsilon_i|X) = \sigma^2$) est cruciale pour la validité des tests de Student et de Fisher.
+\begin{itemize}
+    \item $H_0$ : Homoscédasticité (Variance constante des erreurs).
+    \item $H_1$ : Hétéroscédasticité.
+\end{itemize}
+Nous avons effectué le test de Breusch-Pagan ainsi que le test général de White.
+\begin{itemize}
+    \item Test de Breusch-Pagan : $\chi^2(1) = 3.67$ ($p = 0.0553$).
+    \item Test de White : $\chi^2(2) = 5.22$ ($p = 0.0734$).
+\end{itemize}
+Les p-values étant légèrement supérieures au seuil de 5\%, nous ne rejetons pas formellement l'hypothèse nulle d'homoscédasticité. Cependant, étant donné qu'elles sont proches du seuil critique ("borderline"), nous avons par précaution estimé le modèle avec une matrice de variance-covariance robuste (Estimateur de White / \textit{vce robust}). La correction robuste confirme la significativité du coefficient $\beta$ ($t=4.17$, $p=0.000$), validant ainsi nos conclusions précédentes.
+
+\subsubsection*{2. Test de Normalité des Résidus}
+Pour que les tests statistiques soient valides sur un échantillon de taille modeste ($N=30$), les résidus doivent suivre une distribution normale.
+\begin{itemize}
+    \item $H_0$ : Les résidus suivent une loi Normale.
+    \item $H_1$ : Les résidus ne suivent pas une loi Normale.
+\end{itemize}
+Le test de Shapiro-Wilk donne une statistique $W = 0.970$ avec une p-value de 0.5435.
+La p-value étant très élevée ($> 0.05$), nous ne rejetons pas l'hypothèse de normalité. L'inférence statistique (tests t et F) est donc valide.
+
+
+
+\subsubsection*{3. Test de Multicolinéarité}
+Pour le modèle augmenté (intégrant Croissance et Ouverture), nous avons vérifié l'absence de colinéarité excessive entre les variables explicatives via le facteur d'inflation de la variance (VIF).
+Le VIF moyen est de 1.08, avec un maximum de 1.11 pour l'Ouverture. Ces valeurs étant très inférieures au seuil critique de 10, il n'y a aucun problème de multicolinéarité.
+
+% =================================================================================
+\section{Extensions et Tests de Robustesse}
+% =================================================================================
+
+Pour valider la solidité de nos résultats et approfondir l'analyse économique, nous procédons à quatre vérifications avancées.
+\subsection{Sensibilité à la taille de l'échantillon}
+
+Afin de vérifier la robustesse des résultats, nous testons le modèle sur un échantillon restreint aux 15 premiers pays.
+L'équation estimée devient :
+\begin{equation}
+\widehat{(I/Y)}_i = 14.9563 + 0.3608925 \times (S/Y)_i
+\end{equation}
+Le coefficient $\beta$ passe de 0.3474466 à 0.3608925. Cette stabilité confirme que la relation n'est pas un artefact lié à la composition de l'échantillon.
+
+
+\subsection{Diagnostic des Points Influents (Outliers)}
+
+Nous utilisons la distance de Cook pour identifier les pays dont le comportement atypique pourrait biaiser la droite de régression. Le seuil d'alerte est fixé à $4/N = 0.133$.
+
+
+Deux pays dépassent le seuil : la Corée du Sud (0.426) et la Norvège (0.360). La Norvège est un cas particulier structurel (exportateur net de capitaux pétroliers).
+Nous ré-estimons le modèle en excluant ces pays (Régression Robuste, $N=28$).
+\begin{itemize}
+    \item Coefficient $\beta$ sans outliers : 0.335 (contre 0.347).
+    \item $R^2$ : 0.361.
+\end{itemize}
+Le coefficient reste remarquablement stable. Nos résultats ne sont pas des artefacts statistiques dus à des observations aberrantes.
+
+
+\subsection{L'Effet de l'Union Monétaire (Zone Euro)}
+
+L'union monétaire est théoriquement censée éliminer le risque de change et favoriser une mobilité parfaite des capitaux ($\beta \to 0$). Nous testons si l'appartenance à la Zone Euro modifie structurellement la pente de la relation épargne-investissement.
+
+\textbf{Hypothèses du test de Chow (Interaction) :}
+\begin{itemize}
+    \item $H_0 : \beta_{Euro} = \beta_{Non-Euro}$ (Pas d'effet spécifique : coefficient d'interaction nul).
+    \item $H_1 : \beta_{Euro} \neq \beta_{Non-Euro}$ (L'appartenance à l'Euro modifie la mobilité).
+\end{itemize}
+
+Pour ce test, la liste détaillée et la justification du choix des pays sont présentées en Annexe A.
+
+Les résultats de l'estimation avec interaction sont présentés dans le Tableau \ref{tab:euro}.
+
+\begin{table}[H]
+    \centering
+    \caption{Test de l'effet Zone Euro (Régression avec interaction)}
+    \label{tab:euro}
+    \begin{tabular}{lcccc}
+        \toprule
+        \textbf{Variable} & \textbf{Coef.} & \textbf{Std. Err.} & \textbf{t} & \textbf{P>|t|} \\
+        \midrule
+        Épargne ($\beta_{base}$) & 0.3316 & 0.0871 & 3.81 & 0.001 \\
+        Zone Euro (Dummy) & -1.3321 & 4.0686 & -0.33 & 0.746 \\
+        \textbf{Zone Euro $\times$ Épargne} & \textbf{-0.0158} & \textbf{0.1712} & \textbf{-0.09} & \textbf{0.927} \\
+        Constante & 16.1493 & 2.1907 & 7.37 & 0.000 \\
+        \midrule
+        Observations & 30 & & & \\
+        $R^2$ & 0.4975 & & & \\
+        Prob > F & 0.0004 & & & \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+
+Le coefficient de la variable d'interaction (\textit{Zone Euro\#c.Epargne}) est de -0.0158. La probabilité critique associée (p-value) est de **0.927**, ce qui est très largement supérieur au seuil de 5\%.
+Nous ne pouvons pas rejeter l'hypothèse nulle $H_0$. Statistiquement, la pente de la droite de régression est identique pour les pays de la Zone Euro et pour les autres pays de l'OCDE. Contrairement aux attentes théoriques, l'union monétaire n'a pas engendré de "surplus" significatif d'intégration financière sur la période 2000-2024.
+
+\subsection{Modèle Augmenté (Variables de Contrôle)}
+
+Pour corriger un potentiel biais de variable omise, nous estimons un modèle incluant la Croissance du PIB ($g$) et l'Ouverture Commerciale ($Open$).
+$$ (I/Y)_i = \alpha + \beta_1(S/Y)_i + \beta_2 g_i + \beta_3 Open_i + \epsilon_i $$
+
+\begin{table}[H]
+    \centering
+    \caption{Estimation du Modèle Augmenté}
+    \begin{tabular}{lccc}
+        \toprule
+        \textbf{Variable} & \textbf{Coefficient} & \textbf{Statistique t} & \textbf{P-value} \\
+        \midrule
+        Épargne ($S/Y$) & \textbf{0.3427752} & 5.63 & 0.000 \\
+        Croissance ($g$) & 1.375404 & 4.33 & 0.000 \\
+        Ouverture ($Open$) & -0.0135754 & -2.23 & 0.034 \\
+        \midrule
+        $R^2$ ajusté & \multicolumn{3}{c}{\textbf{0.6361}} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+
+1. Le coefficient de l'épargne reste quasi-identique (0.343 vs 0.347), prouvant la robustesse de la relation initiale.
+2. La croissance est un déterminant majeur et très significatif de l'investissement (effet d'accélérateur).
+3. Le pouvoir explicatif du modèle bondit à 63.6\% (contre 40.2\%).
+
+\subsection{Discussion critique et limites méthodologiques}
+
+Nos résultats appellent une double lecture économique et économétrique.
+
+\textbf{1. Interprétation du coefficient intermédiaire ($0 < \beta < 1$) :}
+Bien que nous rejetions l'autarcie, le coefficient de 0.35 suggère la persistance d'un "biais domestique" (\textit{Home Bias}). Même dans une économie globalisée, l'épargne ne s'investit pas parfaitement à l'étranger en raison de frictions informationnelles, de l'aversion au risque de change (hors zone euro) et de la préférence des investisseurs pour les actifs nationaux qu'ils connaissent mieux (Equity Home Bias Puzzle). L'intégration est forte, mais pas totale.
+
+\textbf{2. La question de l'endogénéité (Critique économétrique) :}
+Une limite fondamentale de l'approche de Feldstein-Horioka réside dans le risque d'endogénéité de la variable d'épargne. En effet, un choc de productivité positif peut stimuler simultanément l'investissement et l'épargne (via la hausse des revenus), créant une corrélation fallacieuse qui biaise $\beta$ à la hausse.
+Théoriquement, la méthode rigoureuse pour corriger ce biais est la méthode des Variables Instrumentales (IV) couplée à un test de Hausman pour vérifier la convergence des estimateurs. Faute d'instruments exogènes valides (tels que les ratios de dépendance démographique) disponibles uniformément sur notre période récente, nous nous sommes limités à l'introduction de variables de contrôle (croissance). Il est probable que notre coefficient MCO soit légèrement surestimé par rapport à un estimateur IV idéal.
+% =================================================================================
+% REMPLACER LA CONCLUSION PAR CECI
+\section{Conclusion}
+
+Ce travail a réévalué le puzzle de Feldstein-Horioka pour les pays de l'OCDE à l'aune des crises du XXIe siècle. Nos analyses économétriques mènent à trois constats majeurs. Premièrement, le "puzzle" s'est considérablement affaibli ($\beta \approx 0.35$ contre $0.90$ historiquement), confirmant une mobilité élevée du capital. Deuxièmement, cette intégration a subi un coup d'arrêt net après la crise de 2008, passant d'une mobilité parfaite à une re-fragmentation partielle. Troisièmement, la relation demeure robuste aux tests de diagnostic et aux spécifications alternatives. Nos résultats confortent l’idée que la mondialisation financière n’est pas un processus linéaire irréversible, mais un équilibre instable entre intégration et fragmentation, dépendant des cycles économiques et de l’incertitude géopolitique. Une extension naturelle consisterait à tester ce modèle sur les pays exportateurs de pétrole (Pays du Golfe). Ces économies présentent une structure d'épargne excédentaire massive (rente) mécaniquement exportée. Il serait pertinent de vérifier si elles affichent un coefficient $\beta$ nul, validant une déconnexion totale entre épargne nationale et investissement domestique.
+% =================================================================================
+% ANNEXES
+% =================================================================================
+\newpage
+\appendix % Bascule la numérotation en lettres
+
+% --- MODIFICATION POUR AFFICHER "ANNEXE A" ---
+\renewcommand{\thesection}{Annexe \Alph{section}} 
+% Pour que les sous-sections restent "A.1" et pas "Annexe A.1" (trop long) :
+\renewcommand{\thesubsection}{\Alph{section}.\arabic{subsection}}
+
+% ---------------------------------------------------------------------------------
+\section{Détails de l'échantillon}
+\label{annexe:pays}
+% ---------------------------------------------------------------------------------
+
+\subsection{Liste des 30 pays de l'échantillon}
+L'étude porte sur les pays membres de l'OCDE de manière continue sur la période 2000-2024 :
+
+\begin{itemize}
+    \item \textbf{Amérique du Nord :} Canada, États-Unis, Mexique.
+    \item \textbf{Asie-Pacifique :} Australie, Corée du Sud, Japon, Nouvelle-Zélande.
+    \item \textbf{Europe (Zone Euro) :} Allemagne, Autriche, Belgique, Espagne, Estonie, Finlande, France, Grèce, Irlande, Italie, Luxembourg, Pays-Bas, Portugal, République slovaque, Slovénie.
+    \item \textbf{Europe (Hors Zone Euro) :} Danemark, Hongrie, Islande, Norvège, Pologne, République tchèque, Royaume-Uni, Suède, Suisse, Turquie.
+\end{itemize}
+
+\subsection{Définition des groupes pour le test "Zone Euro"}
+Pour le test économétrique (Section 5.3), nous avons distingué les membres historiques de ceux ayant rejoint la zone tardivement afin d'éviter tout biais temporel.
+
+\begin{itemize}
+    \item \textbf{Groupe Zone Euro (Dummy = 1) :} 
+    Pays ayant adopté l'Euro avant 2002 : \textit{Allemagne, Autriche, Belgique, Espagne, Finlande, France, Grèce, Irlande, Italie, Luxembourg, Pays-Bas, Portugal.}
+    
+    \item \textbf{Groupe de Contrôle (Dummy = 0) :} 
+    Pays hors zone Euro + membres récents (adhésion post-2007) : \textit{Australie, Canada, Danemark, États-Unis, Hongrie, Islande, Japon, Mexique, Norvège, Nouvelle-Zélande, Pologne, Royaume-Uni, Suède, Suisse, République tchèque, Turquie, Estonie, République slovaque, Slovénie.}
+\end{itemize}
+\vspace{0.5cm}
+Les pays ayant rejoint la Zone Euro après 2007 ont été classés dans le groupe de contrôle afin d’assurer l’homogénéité temporelle des effets. Leur intégration monétaire tardive ne permet pas d’évaluer correctement l’impact de l’union monétaire sur la période 2000-2024.
+
+\newpage
+
+% ---------------------------------------------------------------------------------
+\section{Graphiques et Diagnostics}
+\label{annexe:graphiques}
+% ---------------------------------------------------------------------------------
+
+
+% --- FIGURE 2 : DIAGNOSTICS (A et B) ---
+\begin{figure}[H]
+    \centering
+    \caption{Diagnostics des Résidus}
+    \label{fig:diagnostics}
+    
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Graph_Normalite.png}
+        \vspace{0.1cm}
+        {\footnotesize \textbf{A. Normalité} \\ Histogramme vs Loi Normale.}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Graph_Homoscedasticite.png}
+        \vspace{0.1cm}
+        {\footnotesize \textbf{B. Homoscédasticité} \\ Résidus vs Valeurs Prédites.}
+    \end{minipage}
+    
+    \vspace{0.2cm}
+    \caption*{\footnotesize \textit{Lecture : Le graphique B ne montre pas de structure claire en "entonnoir", ce qui conforte l'hypothèse d'homoscédasticité (validée par le test de Breusch-Pagan).}}
+\end{figure}
+
+
+% --- FIGURE 3 : ROBUSTESSE (A et B) ---
+\begin{figure}[H]
+    \centering
+    \caption{Analyse de Robustesse}
+    \label{fig:robustesse_outliers}
+    
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Graph_Robustesse_Lignes.png}
+        \vspace{0.1cm}
+        {\footnotesize \textbf{A. Sensibilité à l'échantillon} \\ (30 pays vs 15 pays)}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Graph_Outliers.png}
+        \vspace{0.1cm}
+        {\footnotesize \textbf{B. Points Influents} \\ (Distance de Cook)}
+    \end{minipage}
+\end{figure}
+
+\vspace{1cm}
+
+% --- FIGURE 4 : ZONE EURO ---
+\begin{figure}[H]
+    \centering
+    \caption{Comparaison Zone Euro vs Reste de l'OCDE}
+    \label{fig:graph_euro}
+    \includegraphics[width=0.85\textwidth]{Graph_ZoneEuro.png}
+    \vspace{0.2cm}
+    \caption*{\footnotesize \textit{Note : Les pentes des deux droites (bleue pour la Zone Euro, grise pour le reste) sont visuellement proches, confirmant le résultat du test de Chow (absence de différence significative).}}
+\end{figure}
+% --- FIGURE 5 : SYNTHESE  ---
+\begin{figure}[H]
+    \centering
+    \caption{Synthèse : Évolution de la mobilité du capital}
+    \label{fig:synthese}
+    \includegraphics[width=0.85\textwidth]{Graph_Synthese_Beta.png}
+    \vspace{0.2cm}
+    \caption*{\footnotesize \textit{Note : Ce graphique résume l'évolution du coefficient $\beta$ sur les trois sous-périodes. On visualise nettement la rupture après 2009 (remontée du coefficient) et la stabilisation récente. La ligne rouge indique la mobilité parfaite théorique.}}
+\end{figure}
+
+\newpage
+\section{Sorties Stata Détaillées (Logs)}
+\label{annexe:stata}
+
+Cette annexe présente les résultats bruts des estimations principales, des statistiques descriptives ainsi que les tests de diagnostic et de robustesse, tels qu'ils apparaissent dans le logiciel Stata.
+
+{\footnotesize % Police réduite pour l'alignement des logs
+
+% ======================================================================
+\subsection{Statistiques Descriptives (Moyennes 2000-2024)}
+% ======================================================================
+\begin{verbatim}
+. summarize
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+Investisse~t |         30    23.34936    3.071711   17.61273   31.80887
+     Epargne |         30    23.75301    5.748678   12.11023   37.55916
+  Croissance |         30    2.166101    1.130541    .559257   5.101066
+   Ouverture |         30    95.33204    59.59313   26.48879   324.4495
+\end{verbatim}
+
+% ======================================================================
+\subsection{Modèle Global et Tests de Diagnostic}
+% ======================================================================
+\begin{verbatim}
+. reg Investissement Epargne
+
+      Source |       SS           df       MS      Number of obs   =        30
+-------------+----------------------------------   F(1, 28)        =     20.51
+       Model |  115.693799         1  115.693799   Prob > F        =    0.0001
+    Residual |  157.933129        28  5.64046889   R-squared       =    0.4228
+-------------+----------------------------------   Adj R-squared   =    0.4022
+       Total |  273.626928        29  9.43541131   Root MSE        =     2.375
+
+------------------------------------------------------------------------------
+Investisse~t | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+     Epargne |   .3474466   .0767168     4.53   0.000      .1902993   .5045939
+       _cons |   15.09646   1.873134     8.06   0.000      11.25952   18.9334
+------------------------------------------------------------------------------
+
+>>> TESTS D'HETEROSCEDASTICITE <<<
+
+. hettest (Breusch-Pagan / Cook-Weisberg)
+H0: Constant variance
+    chi2(1) =   3.67
+Prob > chi2 = 0.0553
+
+. estat imtest, white (Test de White)
+White's test for Ho: homoskedasticity
+    chi2(2) =   5.22
+Prob > chi2 = 0.0734
+
+>>> TEST DE NORMALITE DES RESIDUS <<<
+
+. swilk e_resid (Shapiro-Wilk)
+    Variable |        Obs        W          V          z         Prob>z
+-------------+------------------------------------------------------
+     e_resid |         30    0.97016      0.949     -0.109      0.54350
+\end{verbatim}
+
+\newpage
+
+% ======================================================================
+\subsection{Estimations par Sous-périodes}
+% ======================================================================
+\begin{verbatim}
+>>> SOUS-PERIODE 2000-2009 (Mobilité Parfaite) <<<
+------------------------------------------------------------------------------
+Investisse~t | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+     Epargne |   .1416047    .095664     1.48   0.150     -.0543541   .3375635
+------------------------------------------------------------------------------
+
+>>> SOUS-PERIODE 2010-2019 (Fragmentation) <<<
+------------------------------------------------------------------------------
+Investisse~t | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+     Epargne |   .4814558   .0808189     5.96   0.000      .3159058   .6470059
+------------------------------------------------------------------------------
+
+>>> SOUS-PERIODE 2020-2024 (Période Récente) <<<
+------------------------------------------------------------------------------
+Investisse~t | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+     Epargne |   .3710686   .0724709     5.12   0.000      .2226188   .5195185
+------------------------------------------------------------------------------
+\end{verbatim}
+
+% ======================================================================
+\subsection{Robustesse : Outliers et Échantillon}
+% ======================================================================
+\begin{verbatim}
+>>> PAYS OUTLIERS (Cook > 0.133) <<<
+     +------------------------+
+     |        pays       cook |
+     |------------------------|
+ 16. | Korea, Rep.   .4259527 |
+ 21. |      Norway   .3597978 |
+     +------------------------+
+
+>>> REGRESSION ROBUSTE (SANS OUTLIERS, N=28) <<<
+      Source |       SS           df       MS      Number of obs   =        28
+-------------+----------------------------------   F(1, 26)        =     14.69
+       Model |  70.7285243         1  70.7285243   Prob > F        =    0.0007
+    Residual |  125.211577        26  4.81582988   R-squared       =    0.3610
+-------------+----------------------------------   Adj R-squared   =    0.3364
+------------------------------------------------------------------------------
+Investisse~t | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+     Epargne |   .3350383   .0874244     3.83   0.001      .1553348   .5147417
+------------------------------------------------------------------------------
+
+>>> REGRESSION ECHANTILLON REDUIT (15 PREMIERS PAYS) <<<
+      Source |       SS           df       MS      Number of obs   =        15
+-------------+----------------------------------   F(1, 13)        =      7.22
+       Model |  33.3206757         1  33.3206757   Prob > F        =    0.0186
+    Residual |  59.9610273        13  4.61238672   R-squared       =    0.3572
+-------------+----------------------------------   Adj R-squared   =    0.3078
+------------------------------------------------------------------------------
+Investisse~t | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+     Epargne |   .3608925   .1342715     2.69   0.019      .0708166   .6509683
+------------------------------------------------------------------------------
+\end{verbatim}
+
+\newpage
+
+% ======================================================================
+\subsection{Extensions : Chow, Euro et Modèle Augmenté}
+% ======================================================================
+\begin{verbatim}
+>>> TEST DE CHOW (Rupture Structurelle 2010) <<<
+-----------------------------------------------------------------------------------
+   Investissement | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+------------------+----------------------------------------------------------------
+Period_Post2010#  |
+        c.Epargne |
+               1  |    .305938   .1204467     2.54   0.014     .0646544    .5472217
+-----------------------------------------------------------------------------------
+
+>>> TEST ZONE EURO (Interaction) <<<
+------------------------------------------------------------------------------------
+    Investissement | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------------+----------------------------------------------------------------
+ZoneEuro#c.Epargne |
+                1  |  -.0157867   .1712101    -0.09   0.927     -.367714    .3361406
+------------------------------------------------------------------------------------
+
+>>> MODELE AUGMENTE (Variables de Contrôle) <<<
+      Source |       SS           df       MS      Number of obs   =        30
+-------------+----------------------------------   F(3, 26)        =     17.90
+       Model |  184.355119         3  61.4517062   Prob > F        =    0.0000
+    Residual |  89.2718093        26  3.43353113   R-squared       =    0.6737
+-------------+----------------------------------   Adj R-squared   =    0.6361
+
+------------------------------------------------------------------------------
+Investisse~t | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+     Epargne |   .3427752   .0608881     5.63   0.000      .2176178   .4679325
+  Croissance |   1.375404    .317638     4.33   0.000      .7224901   2.028319
+   Ouverture |  -.0135754   .0060827    -2.23   0.034     -.0260787  -.0010722
+------------------------------------------------------------------------------
+
+>>> DIAGNOSTIC MULTICOLINEARITE (VIF) <<<
+    Variable |        VIF       1/VIF  
+-------------+----------------------
+   Ouverture |       1.11    0.901056
+  Croissance |       1.09    0.918133
+     Epargne |       1.03    0.966366
+-------------+----------------------
+    Mean VIF |       1.08
+\end{verbatim}
+} 
+
+\newpage
+\addcontentsline{toc}{section}{Bibliographie}
+\section*{Bibliographie}
+
+\subsection*{Articles de référence}
+\begin{itemize}
+    \item Feldstein, M., \& Horioka, C. (1980). "Domestic Saving and International Capital Flows". \textit{The Economic Journal}, 90(358), 314–329.
+    \item Coakley, J., Fuertes, A., \& Spagnolo, F. (2004). "Is the Feldstein–Horioka puzzle history?". \textit{The Manchester School}, 72(5), 569-590.
+    \item Obstfeld, M., \& Taylor, A. M. (2004). \textit{Global capital markets: integration, crisis, and growth}. Cambridge University Press.
+\end{itemize}
+
+\subsection*{Manuels et Cours}
+\begin{itemize}
+    \item Bourbonnais, R. (2021). \textit{Économétrie}. 11e édition. Dunod.
+    \item Mulkay, B. (2025). \textit{Cours d'Économétrie Théorique (M1)}. Université de Montpellier.
+\end{itemize}
+
+\subsection*{Sources de données}
+\begin{itemize}
+    \item Banque Mondiale (2024). \textit{World Development Indicators (WDI)}.
+\end{itemize}
+
+\end{document}
